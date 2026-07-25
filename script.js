@@ -189,7 +189,26 @@ function addCard() {
       </div>
     </div>
   `);
-  new Sortable(document.getElementById(`card-body-${cardCount}`), { group: 'shared-modules', animation: 150, handle: '.drag-handle-mod', onEnd: () => { updateCard(); adjustScale(); } });
+
+  // 💡 ドラッグ＆ドロップでカード間を動かした時に、フォームのセレクトボックスも連動して切り替わるように設定！
+  new Sortable(document.getElementById(`card-body-${cardCount}`), { 
+    group: 'shared-modules', 
+    animation: 150, 
+    handle: '.drag-handle-mod', 
+    onEnd: (evt) => { 
+      const movedItem = evt.item; 
+      const newParentId = evt.to.id; 
+      if (movedItem && newParentId.startsWith('card-body-')) {
+        const modKey = movedItem.id.replace('comp-', '');
+        const cardNum = newParentId.replace('card-body-', '');
+        const sel = document.getElementById(`disp_${modKey}`);
+        if (sel) sel.value = `card-${cardNum}`; // セレクトボックスの表示を合わせる！
+      }
+      updateCard(); 
+      adjustScale(); 
+    } 
+  });
+  
   updateSelectOptions();
 }
 
@@ -268,26 +287,49 @@ function updateCard() {
   const rgb = document.documentElement.style.getPropertyValue('--theme-color-rgb') || '255, 126, 179';
   const showSub = document.getElementById('show-header-sub').checked;
 
+  // 1. 各カードのヘッダーやデザインテーマを更新
   for(let i=1; i<=cardCount; i++) {
-    document.getElementById(`card-name-${i}`).innerText = nameStr + (i > 1 ? ` - P${i}` : '');
-    document.getElementById(`card-icon-${i}`).style.backgroundImage = userIconBase64 ? `url(${userIconBase64})` : '';
-    document.getElementById(`card-${i}`).className = `card ${theme} ${frame}`;
+    const cName = document.getElementById(`card-name-${i}`);
+    if(cName) cName.innerText = nameStr + (i > 1 ? ` - P${i}` : '');
+    
+    const cIcon = document.getElementById(`card-icon-${i}`);
+    if(cIcon) cIcon.style.backgroundImage = userIconBase64 ? `url(${userIconBase64})` : '';
+    
+    const cardDom = document.getElementById(`card-${i}`);
+    if(cardDom) cardDom.className = `card ${theme} ${frame}`;
+    
     const header = document.getElementById(`header-${i}`);
-    header.className = `card-header ${headerBg} ${align}`;
-    if(i > 1) header.style.display = showSub ? 'flex' : 'none';
+    if(header) {
+      header.className = `card-header ${headerBg} ${align}`;
+      if(i > 1) header.style.display = showSub ? 'flex' : 'none';
+    }
   }
 
-  document.querySelectorAll('.use-toggle').forEach(chk => {
-    const mod = document.getElementById(chk.dataset.target);
-    if(chk.checked) {
-      if(mod.parentElement.id === 'components-pool') document.getElementById('card-body-1').appendChild(mod);
-      mod.style.display = 'block';
-    } else {
-      mod.style.display = 'none';
+  // 2. 各グラフ・モジュールを選択されたカードへお引っ越し＆表示切替
+  ['dichotomy', 'cog', 'ego', 'tci', 'free'].forEach(modKey => {
+    const sel = document.getElementById(`disp_${modKey}`);
+    const comp = document.getElementById(`comp-${modKey}`);
+    const chk = document.querySelector(`.use-toggle[data-target="comp-${modKey}"]`);
+    
+    if (sel && comp) {
+      const targetVal = sel.value; // 'card-1', 'card-2', 'none'
+      if (targetVal === 'none' || (chk && !chk.checked)) {
+        comp.style.display = 'none';
+      } else {
+        const targetBody = document.getElementById(targetVal.replace('card-', 'card-body-'));
+        if (targetBody && comp.parentElement !== targetBody) {
+          targetBody.appendChild(comp); // 指定されたカードに自動で引っ越し！
+        }
+        comp.style.display = 'block';
+      }
     }
   });
 
-  for(let i=1; i<=cardCount; i++) document.getElementById(`card-typologies-${i}`).innerHTML = '';
+  // 3. 基本の類型＆カスタム類型の振り分け
+  for(let i=1; i<=cardCount; i++) {
+    const typoGrid = document.getElementById(`card-typologies-${i}`);
+    if(typoGrid) typoGrid.innerHTML = '';
+  }
   
   const orderList = Array.from(document.getElementById('typologies-form').children).map(el => {
     return el.classList.contains('drag-item-typo') ? { type: 'base', id: el.dataset.id } : { type: 'custom', id: el.id.replace('wrap_', '') };
@@ -298,10 +340,12 @@ function updateCard() {
     if(item.type === 'base') {
       const t = baseTypologies.find(x => x.id === item.id);
       label = t.label; val = document.getElementById(`val_${item.id}`).value.trim();
-      isOff = document.getElementById(`off_${item.id}`)?.checked; tCard = document.getElementById(`disp_item_${item.id}`).value;
+      isOff = document.getElementById(`off_${item.id}`)?.checked;
+      tCard = document.getElementById(`disp_item_${item.id}`).value;
     } else {
       label = document.getElementById(`name_${item.id}`).value.trim() || 'カスタム';
-      val = document.getElementById(`val_${item.id}`).value.trim(); tCard = document.getElementById(`disp_item_${item.id}`).value;
+      val = document.getElementById(`val_${item.id}`).value.trim();
+      tCard = document.getElementById(`disp_item_${item.id}`).value;
     }
     if(val && tCard !== 'none') {
       const grid = document.getElementById(tCard.replace('card-', 'card-typologies-'));
@@ -311,46 +355,70 @@ function updateCard() {
 
   for(let i=1; i<=cardCount; i++) {
     const mod = document.getElementById(`comp-typologies-${i}`);
-    mod.style.display = document.getElementById(`card-typologies-${i}`).innerHTML === '' ? 'none' : 'block';
+    const grid = document.getElementById(`card-typologies-${i}`);
+    if(mod && grid) {
+      mod.style.display = grid.innerHTML === '' ? 'none' : 'block';
+    }
   }
 
+  // 4. MBTI 2分法グラフの再描画（数値・ツマミ付き）
   const dichoArea = document.getElementById('card-dichotomy');
-  dichoArea.innerHTML = '<div class="dicho-wrap">';
-  dichotomies.forEach(d => {
-    const val = Number(document.getElementById(`dicho_${d.id}`).value); 
-    let rPercent = 50 + (val / 2);
-    let lPercent = 100 - rPercent;
-    let fillLeft = Math.min(50, rPercent);
-    let fillWidth = Math.abs(val / 2);
-    
-    dichoArea.querySelector('.dicho-wrap').innerHTML += `
-      <div class="dicho-bar-wrap">
-        <div class="dicho-labels">
-          <span>${d.l} <small class="val-txt">(${lPercent}%)</small></span>
-          <span>${d.r} <small class="val-txt">(${rPercent}%)</small></span>
+  if(dichoArea) {
+    dichoArea.innerHTML = '<div class="dicho-wrap">';
+    dichotomies.forEach(d => {
+      const val = Number(document.getElementById(`dicho_${d.id}`).value); 
+      let rPercent = 50 + (val / 2);
+      let lPercent = 100 - rPercent;
+      let fillLeft = Math.min(50, rPercent);
+      let fillWidth = Math.abs(val / 2);
+      
+      dichoArea.querySelector('.dicho-wrap').innerHTML += `
+        <div class="dicho-bar-wrap">
+          <div class="dicho-labels">
+            <span>${d.l} <small class="val-txt">(${lPercent}%)</small></span>
+            <span>${d.r} <small class="val-txt">(${rPercent}%)</small></span>
+          </div>
+          <div class="dicho-track">
+            <div class="dicho-fill" style="left:${fillLeft}%; width:${fillWidth}%;"></div>
+            <div class="dicho-thumb" style="left:${rPercent}%;"></div>
+          </div>
         </div>
-        <div class="dicho-track">
-          <div class="dicho-fill" style="left:${fillLeft}%; width:${fillWidth}%;"></div>
-          <div class="dicho-thumb" style="left:${rPercent}%;"></div>
-        </div>
-      </div>
-    `;
-  });
+      `;
+    });
+  }
 
+  // 5. 心理機能スコアの更新＆グラフ色付け
   const cogScores = cogFunctions.map(f => ({ n: f, s: Number(document.getElementById(`cog_${f}`).value||0) }));
   const sortedCog = [...cogScores].sort((a,b)=>b.s - a.s);
-  document.getElementById('function-order-text').innerText = sortedCog.map(c=>c.n).join(' > ');
+  const orderTextEl = document.getElementById('function-order-text');
+  if(orderTextEl) orderTextEl.innerText = sortedCog.map(c=>c.n).join(' > ');
   
   let cogBgColor = cogColorType === 'colorful' ? cogScores.map(c => colorfulCog[c.n]) : Array(8).fill(c1);
-  chartInstances.cog.data.datasets[0].data = cogScores.map(c=>c.s); 
-  chartInstances.cog.data.datasets[0].backgroundColor = cogBgColor; 
-  chartInstances.cog.update();
+  if(chartInstances.cog) {
+    chartInstances.cog.data.datasets[0].data = cogScores.map(c=>c.s); 
+    chartInstances.cog.data.datasets[0].backgroundColor = cogBgColor; 
+    chartInstances.cog.update();
+  }
   
-  chartInstances.ego.data.datasets[0].data = egogramKeys.map(k => Number(document.getElementById(`ego_${k}`).value||0)); chartInstances.ego.data.datasets[0].borderColor = c1; chartInstances.ego.data.datasets[0].backgroundColor = `rgba(${rgb}, 0.1)`; chartInstances.ego.update();
-  chartInstances.tci.data.datasets[0].data = tciKeys.map(k => Number(document.getElementById(`tci_${k}`).value||0)); chartInstances.tci.data.datasets[0].borderColor = c1; chartInstances.tci.data.datasets[0].backgroundColor = `rgba(${rgb}, 0.2)`; chartInstances.tci.update();
+  // 6. エゴグラム & TCI グラフの更新
+  if(chartInstances.ego) {
+    chartInstances.ego.data.datasets[0].data = egogramKeys.map(k => Number(document.getElementById(`ego_${k}`).value||0)); 
+    chartInstances.ego.data.datasets[0].borderColor = c1; 
+    chartInstances.ego.data.datasets[0].backgroundColor = `rgba(${rgb}, 0.1)`; 
+    chartInstances.ego.update();
+  }
 
+  if(chartInstances.tci) {
+    chartInstances.tci.data.datasets[0].data = tciKeys.map(k => Number(document.getElementById(`tci_${k}`).value||0)); 
+    chartInstances.tci.data.datasets[0].borderColor = c1; 
+    chartInstances.tci.data.datasets[0].backgroundColor = `rgba(${rgb}, 0.2)`; 
+    chartInstances.tci.update();
+  }
+
+  // 7. フリースペースの更新
   const freeText = document.getElementById('free-space').value;
-  document.getElementById('card-free-space').innerText = freeText;
+  const freeSpaceBox = document.getElementById('card-free-space');
+  if(freeSpaceBox) freeSpaceBox.innerText = freeText;
 }
 
 function startEffects() {
