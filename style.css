@@ -23,15 +23,17 @@ header p { margin: 10px 0 0; font-size: 1em; opacity: 0.95; position: relative; 
 .shape-2 { width: 80px; height: 80px; bottom: -20px; right: 10%; }
 
 .main-container { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; max-width: 1600px; margin: 0 auto; }
-.mobile-only { display: none; }
 
+/* スマホ用レスポンシブ (はみ出し防止＆自動スケール用) */
 @media (max-width: 1100px) {
   .main-container { flex-direction: column; padding: 15px; gap: 20px;}
   .editor-panel { flex: 1 1 100%; width: 100%; box-sizing: border-box; max-height: none !important;}
-  .preview-panel { width: 100%; overflow-x: auto; align-items: flex-start; padding-bottom: 20px; }
-  .cards-wrapper { width: max-content; padding-right: 20px; }
-  .mobile-only { display: inline; color: #ff7675; font-weight: bold;}
+  .preview-panel { width: 100%; padding-bottom: 20px; overflow: hidden; }
 }
+
+/* 自動スケールさせるためのラッパー */
+.preview-scale-box { width: 100%; max-width: 900px; position: relative; display: flex; justify-content: flex-start; }
+.cards-wrapper { width: 900px; display: flex; flex-direction: column; align-items: center; gap: 40px; }
 
 .guide-box { background: #fff; border: 1px solid var(--theme-color-1); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
 .guide-box summary { background: rgba(var(--theme-color-rgb), 0.1); color: var(--theme-color-1); padding: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
@@ -79,7 +81,6 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .list-item-row .custom-select { padding: 8px; font-size: 0.85em; width: 120px; flex: unset;}
 .list-item-row input[type="text"] { padding: 8px; flex: 1; min-width: 100px;}
 
-/* 🎚️ スライダーと数値表記のデザイン */
 .size-controls { display: flex; gap: 10px; background: #fdfdfd; padding: 10px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 15px; font-size: 0.8em; font-weight: bold; align-items: center; flex-wrap: wrap;}
 .size-controls input[type="range"] { flex: 1; accent-color: var(--theme-color-1); min-width: 60px;}
 .val-disp { display: inline-block; width: 45px; text-align: right; font-weight: normal; color: #888; font-family: monospace; font-size: 1.1em;}
@@ -94,8 +95,6 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .btn-info { background: #55efc4; color: #2d3436; }
 .btn-outline { border: 1px dashed var(--theme-color-1); color: var(--theme-color-1); background: transparent; width: 100%;}
 
-/* プレビューカード */
-.cards-wrapper { display: flex; flex-direction: column; align-items: center; gap: 40px; }
 .card { width: 900px; min-height: 480px; background-color: var(--card-bg, #ffffff); border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; position: relative; }
 
 .effect-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 5; }
@@ -109,7 +108,6 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .card.theme-nature { --card-bg: #f8faf5; background-image: radial-gradient(#d4e2d4 2px, transparent 2px); background-size: 30px 30px; }
 .card.theme-night { --card-bg: #191970; color: #fff; background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 50px 50px; }
 
-/* 🌟 ヘッダー背景 */
 .card-header { padding: 25px 35px; display: flex; align-items: center; position: relative; border-bottom: 3px solid rgba(255,255,255,0.2); z-index: 10; color: white;}
 .card-header.header-solid { background: var(--theme-bg); }
 .card-header.header-stripe { background: repeating-linear-gradient(45deg, var(--theme-color-1), var(--theme-color-1) 5px, var(--theme-color-2) 5px, var(--theme-color-2) 10px); }
@@ -134,7 +132,6 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 
 .card-body { padding: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; align-content: flex-start; flex: 1; z-index: 10; min-height: 200px;}
 
-/* 🖼️ フレーム（モジュール枠） */
 .card-module { box-sizing: border-box; padding: 20px; width: var(--mod-width, 100%); }
 .card-module.sortable-ghost { opacity: 0.4; }
 .drag-handle-mod { cursor: grab; margin-right: 8px; opacity: 0.7; }
