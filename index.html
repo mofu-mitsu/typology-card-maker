@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- 🔍 SEO対策 & 🫧Favicon -->
+  <title>類型自認カードメーカー | 自分の性格タイプをおしゃれな画像に！</title>
+  <meta name="description" content="MBTI、エニアグラム、ソシオニクス、Big Fiveなど、あなたの自認する類型をまとめて、おしゃれな世界観のプロフィールカード（画像）を作成できる無料ツールです。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🫧</text></svg>">
+  
+  <!-- 📱 OGP / Twitter Card -->
+  <meta property="og:url" content="https://mofu-mitsu.github.io/typology-card-maker/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="類型自認カードメーカー | 自分の性格タイプをおしゃれな画像に！">
+  <meta property="og:description" content="MBTI、エニアグラム、ソシオニクスなど、あなたの自認する類型をまとめて、おしゃれなプロフィールカードを作成できるツールです。">
+  <meta property="og:image" content="https://mofu-mitsu.github.io/typology-card-maker/ogp.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://mofu-mitsu.github.io/typology-card-maker/ogp.png">
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru&family=M+PLUS+Rounded+1c:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Shippori+Mincho&family=Yusei+Magic&display=swap');</style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="bg-shape shape-1"></div><div class="bg-shape shape-2"></div><div class="bg-shape shape-3">✦</div><div class="bg-shape shape-4">✦</div>
+    <h1><i class="fa-solid fa-address-card"></i> 類型自認カードメーカー</h1>
+    <p>あなたの自認タイプを入力して、自分だけの世界観カードを作成しましょう✨</p>
+  </header>
+
+  <div class="main-container">
+    <div class="editor-panel">
+      
+      <details class="guide-box">
+        <summary><i class="fa-solid fa-circle-question"></i> 使い方ガイド (クリックで開く)</summary>
+        <div class="guide-content">
+          <ul>
+            <li><strong>画像読み込み:</strong> 以前保存した画像をアップロードすると続きから編集できます。</li>
+            <li><strong>並び替え:</strong> 右側のプレビュー画面で、各枠（モジュール）のタイトル部分をドラッグすると自由に配置を変えられます。基本類型も左の「≡」で並べ替えられます。</li>
+            <li><strong>サイズ調整:</strong> グラフや2分法は、スライダーで幅・高さ・拡大率を自由に変更できます。幅を小さくすれば横に並べることも可能です！</li>
+          </ul>
+        </div>
+      </details>
+
+      <div class="toolbar">
+        <label for="imageLoader" class="file-drop-area" title="画像を読み込む">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>以前の画像を読み込んで続きから編集</span>
+          <input type="file" id="imageLoader" accept="image/png">
+        </label>
+      </div>
+      
+      <div class="toolbar-buttons">
+        <button id="resetBtn" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> リセット</button>
+        <button id="shareBtn" class="btn btn-info"><i class="fa-solid fa-share-nodes"></i> 共有</button>
+      </div>
+
+      <div class="section">
+        <h2><i class="fa-solid fa-palette"></i> デザイン ＆ プロフィール</h2>
+        
+        <label class="section-label">テーマカラー（プリセット）</label>
+        <div class="color-picker-wrapper">
+          <button class="preset-color" style="background:#72B4FF;" data-c1="#72B4FF" data-c2="#72B4FF"></button>
+          <button class="preset-color" style="background:#FF72B4;" data-c1="#FF72B4" data-c2="#FF72B4"></button>
+          <button class="preset-color" style="background:#52D681;" data-c1="#52D681" data-c2="#52D681"></button>
+          <button class="preset-color" style="background:linear-gradient(135deg, #FF7EB3, #8B44FF);" data-c1="#FF7EB3" data-c2="#8B44FF"></button>
+          <button class="preset-color" style="background:linear-gradient(135deg, #4a90e2, #9013fe);" data-c1="#4a90e2" data-c2="#9013fe"></button>
+          <button class="preset-color" style="background:linear-gradient(135deg, #f6d365, #fda085);" data-c1="#f6d365" data-c2="#fda085"></button>
+          <button class="preset-color" style="background:linear-gradient(135deg, #a1c4fd, #c2e9fb);" data-c1="#a1c4fd" data-c2="#c2e9fb"></button>
+        </div>
+
+        <div class="input-group">
+          <label>カスタムグラデーション作成</label>
+          <div class="custom-color-inputs">
+            <input type="color" id="theme-color-1" value="#FF7EB3" class="color-circle">
+            <span>×</span>
+            <input type="color" id="theme-color-2" value="#8B44FF" class="color-circle">
+          </div>
+          <div class="select-wrapper">
+            <select id="gradient-type" class="custom-select">
+              <option value="135deg">斜めグラデーション</option>
+              <option value="90deg">横グラデーション</option>
+              <option value="180deg">縦グラデーション</option>
+              <option value="none">グラデーションなし（単色）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>フォント</label>
+          <div class="select-wrapper">
+            <select id="card-font" class="custom-select">
+              <option value="'Noto Sans JP', sans-serif">ゴシック体 (Noto Sans)</option>
+              <option value="'M PLUS Rounded 1c', sans-serif">丸ゴシック (M PLUS)</option>
+              <option value="'Shippori Mincho', serif">明朝体 (しっぽり明朝)</option>
+              <option value="'Yusei Magic', sans-serif">手書き風 (油性マジック)</option>
+              <option value="'Kiwi Maru', serif">レトロ丸ゴシック (キウイ丸)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>カード全体の世界観（背景）</label>
+          <div class="select-wrapper">
+            <select id="card-theme" class="custom-select">
+              <option value="theme-simple">シンプル (無地)</option>
+              <option value="theme-watercolor">水彩風</option>
+              <option value="theme-geometric">幾何学</option>
+              <option value="theme-cyber">サイバー空間</option>
+              <option value="theme-nature">ボタニカル</option>
+              <option value="theme-night">星空</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>ヘッダー（名前欄）の背景デザイン</label>
+          <div class="select-wrapper">
+            <select id="header-bg-style" class="custom-select">
+              <option value="header-solid">ベタ塗り / グラデーション</option>
+              <option value="header-stripe">斜めストライプ</option>
+              <option value="header-dot">ドット柄</option>
+              <option value="header-grid">方眼紙</option>
+              <option value="header-glass">透明ガラス風</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>枠（フレーム）のデザイン</label>
+          <div class="select-wrapper">
+            <select id="card-frame" class="custom-select">
+              <option value="frame-glass">ガラス (Glassmorphism)</option>
+              <option value="frame-simple">シンプル (白枠)</option>
+              <option value="frame-neon">ネオン (サイバー向け)</option>
+              <option value="frame-gold">ゴールド (高級感)</option>
+              <option value="frame-ryousan">量産系 (リボン・レース風)</option>
+              <option value="frame-wa">和風 (和紙・上下枠)</option>
+              <option value="frame-pop">ポップ (太枠・ベタ影)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>エフェクト (降ってくる装飾)</label>
+          <div class="select-wrapper">
+            <select id="card-effect" class="custom-select">
+              <option value="none">なし</option>
+              <option value="✨">✨ キラキラ</option>
+              <option value="🌸">🌸 桜</option>
+              <option value="🫧">🫧 泡</option>
+              <option value="⭐">⭐ 星</option>
+              <option value="🦋">🦋 蝶</option>
+              <option value="🥺">🥺 ぴえん</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>お名前</label>
+          <input type="text" id="user-name" placeholder="お名前を入力">
+        </div>
+
+        <div class="input-group">
+          <label>アイコン画像</label>
+          <label class="icon-upload-btn">
+            <i class="fa-solid fa-camera-retro"></i> アイコン画像を選択
+            <input type="file" id="icon-loader" accept="image/*" style="display:none;">
+          </label>
+        </div>
+
+        <div class="input-group">
+          <label>ヘッダーの配置</label>
+          <div class="select-wrapper">
+            <select id="header-align" class="custom-select">
+              <option value="align-center">中央寄せ</option>
+              <option value="align-left">左寄せ</option>
+              <option value="align-right">右寄せ</option>
+            </select>
+          </div>
+        </div>
+        <div class="checkbox-wrap"><label><input type="checkbox" id="show-header-sub" checked> 2枚目以降も名前とアイコンを表示する</label></div>
+      </div>
+
+      <div class="section">
+        <h2><i class="fa-solid fa-brain"></i> 類型の入力</h2>
+        <p class="hint">※左の「≡」をドラッグして、<strong>カスタム枠も含めて自由に順番を入れ替えられます！</strong></p>
+        <div id="typologies-form" class="sortable-list"></div>
+        <div class="custom-add-area">
+          <button id="addCustomTypoBtn" class="btn btn-sm btn-outline"><i class="fa-solid fa-plus"></i> カスタム枠を追加</button>
+        </div>
+      </div>
+
+      <!-- IDをしっかり付けたスライダーたち！ -->
+      <div class="section">
+        <h2><label><input type="checkbox" class="use-toggle" data-target="comp-dichotomy" checked> MBTI 2分法</label></h2>
+        <div class="size-controls">
+          <label>幅:<input type="range" id="slider_w_dicho" class="mod-slider" data-prop="--mod-width" data-target="comp-dichotomy" min="20" max="100" value="100"><span class="val-disp">100%</span></label>
+          <label>高:<input type="range" id="slider_h_dicho" class="mod-slider" data-prop="--mod-height" data-target="comp-dichotomy" min="80" max="400" value="200"><span class="val-disp">200px</span></label>
+          <label>拡:<input type="range" id="slider_s_dicho" class="mod-slider" data-prop="--mod-scale" data-target="comp-dichotomy" min="50" max="150" value="100"><span class="val-disp">100%</span></label>
+        </div>
+        <div id="dichotomy-form" class="slider-inputs"></div>
+      </div>
+
+      <div class="section">
+        <h2><label><input type="checkbox" class="use-toggle" data-target="comp-cog" checked> 心理機能スコア</label></h2>
+        <div class="size-controls">
+          <label>幅:<input type="range" id="slider_w_cog" class="mod-slider" data-prop="--mod-width" data-target="comp-cog" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
+          <label>高:<input type="range" id="slider_h_cog" class="mod-slider" data-prop="--mod-height" data-target="comp-cog" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
+          <label>拡:<input type="range" id="slider_s_cog" class="mod-slider" data-prop="--mod-scale" data-target="comp-cog" min="50" max="150" value="100"><span class="val-disp">100%</span></label>
+        </div>
+        <div class="input-group" style="margin-top:10px;">
+          <label>グラフの配色</label>
+          <div class="select-wrapper">
+            <select id="cog-color-type" class="custom-select">
+              <option value="colorful">8色カラフル（Te:青, Fi:赤など）</option>
+              <option value="theme">テーマカラーに合わせる</option>
+            </select>
+          </div>
+        </div>
+        <div id="cognitive-functions-form" class="grid-inputs"></div>
+      </div>
+
+      <div class="section">
+        <h2><label><input type="checkbox" class="use-toggle" data-target="comp-ego" checked> エゴグラム</label></h2>
+        <div class="size-controls">
+          <label>幅:<input type="range" id="slider_w_ego" class="mod-slider" data-prop="--mod-width" data-target="comp-ego" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
+          <label>高:<input type="range" id="slider_h_ego" class="mod-slider" data-prop="--mod-height" data-target="comp-ego" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
+          <label>拡:<input type="range" id="slider_s_ego" class="mod-slider" data-prop="--mod-scale" data-target="comp-ego" min="50" max="150" value="100"><span class="val-disp">100%</span></label>
+        </div>
+        <div id="egogram-form" class="grid-inputs"></div>
+      </div>
+
+      <div class="section">
+        <h2><label><input type="checkbox" class="use-toggle" data-target="comp-tci" checked> TCI診断</label></h2>
+        <div class="size-controls">
+          <label>幅:<input type="range" id="slider_w_tci" class="mod-slider" data-prop="--mod-width" data-target="comp-tci" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
+          <label>高:<input type="range" id="slider_h_tci" class="mod-slider" data-prop="--mod-height" data-target="comp-tci" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
+          <label>拡:<input type="range" id="slider_s_tci" class="mod-slider" data-prop="--mod-scale" data-target="comp-tci" min="50" max="150" value="100"><span class="val-disp">100%</span></label>
+        </div>
+        <div id="tci-form" class="grid-inputs"></div>
+      </div>
+
+      <div class="section">
+        <h2><label><input type="checkbox" class="use-toggle" data-target="comp-free" checked> フリースペース</label></h2>
+        <textarea id="free-space" rows="4" placeholder="自由に自己紹介や補足を書いてね！"></textarea>
+      </div>
+    </div>
+
+    <!-- プレビュー側 -->
+    <div class="preview-panel">
+      <div class="preview-actions">
+        <button id="addCardBtn" class="btn btn-primary-outline"><i class="fa-solid fa-plus"></i> カードを追加</button>
+        <button id="downloadAllBtn" class="btn btn-primary"><i class="fa-solid fa-download"></i> すべてのカードを保存</button>
+      </div>
+      <p class="hint">※右側の各モジュール（枠）は、<strong>直接ドラッグ＆ドロップ</strong>で自由に並び替えられます！<br><span class="mobile-only">※プレビューは横にスクロールできます👉</span></p>
+      
+      <div id="cards-container" class="cards-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- 描画用モジュールプール -->
+  <div id="components-pool" style="display: none;">
+    <div id="comp-dichotomy" class="card-module draggable-module" style="--mod-width: 100%; --mod-height: 200px;">
+      <h3 class="module-title"><i class="fa-solid fa-sliders drag-handle-mod"></i> Dichotomy</h3>
+      <div class="module-content dichotomy-bars graph-box" id="card-dichotomy"></div>
+    </div>
+    <div id="comp-cog" class="card-module draggable-module" style="--mod-width: 48%; --mod-height: 250px;">
+      <h3 class="module-title"><i class="fa-solid fa-brain drag-handle-mod"></i> Cognitive Functions</h3>
+      <div class="module-content">
+        <div class="function-order-box"><span id="function-order-text">未入力</span></div>
+        <div class="graph-box"><canvas id="cogChart"></canvas></div>
+      </div>
+    </div>
+    <div id="comp-ego" class="card-module draggable-module" style="--mod-width: 48%; --mod-height: 250px;">
+      <h3 class="module-title"><i class="fa-solid fa-chart-line drag-handle-mod"></i> Egogram</h3>
+      <div class="module-content graph-box"><canvas id="egoChart"></canvas></div>
+    </div>
+    <div id="comp-tci" class="card-module draggable-module" style="--mod-width: 48%; --mod-height: 250px;">
+      <h3 class="module-title"><i class="fa-solid fa-satellite-dish drag-handle-mod"></i> TCI</h3>
+      <div class="module-content graph-box"><canvas id="tciChart"></canvas></div>
+    </div>
+    <div id="comp-free" class="card-module draggable-module" style="--mod-width: 100%;">
+      <h3 class="module-title"><i class="fa-regular fa-comment drag-handle-mod"></i> Message</h3>
+      <div class="module-content free-space-box" id="card-free-space"></div>
+    </div>
+  </div>
+
+  <div id="resetModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3><i class="fa-solid fa-triangle-exclamation" style="color:#ff7675;"></i> 全てリセットしますか？</h3>
+      <p>入力した内容や画像など、全てのデータが消去されます。</p>
+      <div class="modal-actions"><button id="cancelResetBtn" class="btn btn-secondary">キャンセル</button><button id="confirmResetBtn" class="btn btn-danger">リセットする</button></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <footer>
+    <div class="footer-links"><a href="https://mofu-mitsu.github.io/lab.html"><i class="fa-solid fa-house"></i> ホームに戻る</a></div>
+    <div class="footer-ad">
+      <a href="https://hb.afl.rakuten.co.jp/hsc/4e336792.7c0b3872.3d95c766.8a7897b5/?link_type=pict&ut=eyJwYWdlIjoic2hvcCIsInR5cGUiOiJwaWN0IiwiY29sIjoxLCJjYXQiOiI1OCIsImJhbiI6MzIzMDk1MCwiYW1wIjpmYWxzZX0%3D" target="_blank" rel="nofollow sponsored noopener" style="word-wrap:break-word;"><img src="https://hbb.afl.rakuten.co.jp/hsb/4e336792.7c0b3872.3d95c766.8a7897b5/?me_id=1&me_adv_id=3230950&t=pict" border="0" style="margin:2px" alt="" title=""></a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
