@@ -26,16 +26,12 @@ function initTool() {
   addCard(); // 初期カード
   updateCard();
   
-  // 📱 スマホ時のプレビュー自動縮小をセット！
-  if (window.ResizeObserver) {
-    const observer = new ResizeObserver(adjustScale);
-    observer.observe(document.getElementById('cards-container'));
-  }
+  // 📱 スマホ時の高さを常に監視して、絶対に見切れないようにする！
+  setInterval(adjustScale, 500);
   window.addEventListener('resize', adjustScale);
-  setTimeout(adjustScale, 100);
 }
 
-// 🪄 スマホの画面幅に合わせて自動で縮小させる魔法の関数！
+// 🪄 スマホの画面幅に合わせて自動で縮小＆高さを確保する魔法の関数！
 function adjustScale() {
   const container = document.getElementById('cards-container');
   const box = document.getElementById('preview-scale-box');
@@ -44,9 +40,8 @@ function adjustScale() {
   if (window.innerWidth <= 1100) {
     const scale = box.clientWidth / 900;
     container.style.transform = `scale(${scale})`;
-    container.style.transformOrigin = 'top left';
-    // 縮小した分の高さを親枠に反映させて、無駄な余白を消す！
-    box.style.height = `${container.offsetHeight * scale}px`;
+    // 要素全体が入るように、縮小した高さ＋少し余裕（50px）をもたせる！
+    box.style.height = `${container.scrollHeight * scale + 50}px`;
   } else {
     container.style.transform = 'none';
     box.style.height = 'auto';
@@ -185,7 +180,7 @@ function addCard() {
       </div>
     </div>
   `);
-  new Sortable(document.getElementById(`card-body-${cardCount}`), { group: 'shared-modules', animation: 150, handle: '.drag-handle-mod', onEnd: () => { updateCard(); setTimeout(adjustScale, 50); } });
+  new Sortable(document.getElementById(`card-body-${cardCount}`), { group: 'shared-modules', animation: 150, handle: '.drag-handle-mod', onEnd: () => { updateCard(); adjustScale(); } });
   updateSelectOptions();
 }
 
@@ -396,9 +391,15 @@ async function downloadAllCards() {
   const box = document.getElementById('preview-scale-box');
   const originalTransform = wrapper.style.transform;
   
-  // スマホ時でも超高画質で保存するための魔法！🪄
+  // スマホ時でも超高画質で保存する魔法
   wrapper.style.transform = 'scale(1)'; 
   if(box) { box.style.height = 'auto'; box.style.overflow = 'visible'; }
+
+  // 👻 ガラス風（backdrop-filter）が消えちゃう問題の対策！保存する一瞬だけ白を濃くする！
+  const glassHeaders = document.querySelectorAll('.header-glass');
+  const glassModules = document.querySelectorAll('.frame-glass .card-module');
+  glassHeaders.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.7)');
+  glassModules.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.85)');
   
   const jsonBytes = new TextEncoder().encode('__TYPO_DATA__' + JSON.stringify(collectData()));
 
@@ -409,8 +410,7 @@ async function downloadAllCards() {
     const canvas = await html2canvas(card, { 
       scale: 2, 
       backgroundColor: null, 
-      useCORS: true,
-      windowWidth: 950 // 画面外の見切れを防ぐ！
+      useCORS: true
     });
     card.style.borderRadius = '';
     
@@ -426,9 +426,12 @@ async function downloadAllCards() {
     await new Promise(r => setTimeout(r, 500));
   }
   
+  // ガラスの色とサイズを元に戻す
+  glassHeaders.forEach(el => el.style.backgroundColor = '');
+  glassModules.forEach(el => el.style.backgroundColor = '');
   wrapper.style.transform = originalTransform;
   if(box) box.style.overflow = 'hidden';
-  adjustScale(); // 高さを再調整
+  adjustScale();
   
   showToast("🎉 すべてのカードを保存しました！"); startEffects();
 }
