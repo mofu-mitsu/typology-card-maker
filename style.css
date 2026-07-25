@@ -23,17 +23,21 @@ header p { margin: 10px 0 0; font-size: 1em; opacity: 0.95; position: relative; 
 .shape-2 { width: 80px; height: 80px; bottom: -20px; right: 10%; }
 
 .main-container { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; max-width: 1600px; margin: 0 auto; }
+.mobile-only { display: none; }
 
-/* スマホ用レスポンシブ (はみ出し防止＆自動スケール用) */
+/* スマホ用レスポンシブ (自動スケールで完全に見切れ防止！) */
 @media (max-width: 1100px) {
   .main-container { flex-direction: column; padding: 15px; gap: 20px;}
   .editor-panel { flex: 1 1 100%; width: 100%; box-sizing: border-box; max-height: none !important;}
-  .preview-panel { width: 100%; padding-bottom: 20px; overflow: hidden; }
+  .preview-panel { width: 100%; padding-bottom: 20px; overflow-x: hidden; }
+  .preview-scale-box { width: 100%; overflow: hidden; }
+  .cards-wrapper { transform-origin: top left; }
+  .mobile-only { display: inline; color: #ff7675; font-weight: bold;}
 }
 
 /* 自動スケールさせるためのラッパー */
-.preview-scale-box { width: 100%; max-width: 900px; position: relative; display: flex; justify-content: flex-start; }
-.cards-wrapper { width: 900px; display: flex; flex-direction: column; align-items: center; gap: 40px; }
+.preview-scale-box { width: 100%; position: relative; display: block; transition: height 0.3s;}
+.cards-wrapper { width: 900px; display: flex; flex-direction: column; align-items: center; gap: 40px; margin: 0 auto;}
 
 .guide-box { background: #fff; border: 1px solid var(--theme-color-1); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
 .guide-box summary { background: rgba(var(--theme-color-rgb), 0.1); color: var(--theme-color-1); padding: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
@@ -114,12 +118,13 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .card-header.header-dot { background: var(--theme-color-1); background-image: radial-gradient(var(--theme-color-2) 20%, transparent 20%); background-size: 12px 12px; }
 .card-header.header-grid { background: var(--theme-color-1); background-image: linear-gradient(var(--theme-color-2) 1px, transparent 1px), linear-gradient(90deg, var(--theme-color-2) 1px, transparent 1px); background-size: 20px 20px; }
 
+/* 🌟 ガラス感MAX！ボヤッと感とフチの光を追加！ */
 .card-header.header-glass { 
-  background: rgba(255, 255, 255, 0.15); 
-  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+  background: rgba(255, 255, 255, 0.2); 
+  backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); 
   color: inherit; 
-  border-bottom: 1px solid rgba(255,255,255,0.3); 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.5); 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05), inset 0 0 20px rgba(255,255,255,0.4);
 }
 
 .card-header.align-left { justify-content: flex-start; }
@@ -128,7 +133,7 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .profile-area { display: flex; align-items: center; gap: 20px; }
 .icon-circle { width: 90px; height: 90px; border-radius: 50%; background: white; background-size: cover; background-position: center; border: 4px solid rgba(255,255,255,0.8); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 .profile-area h2 { margin: 0; font-size: 2.2em; text-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight: 800; }
-.header-glass .profile-area h2 { text-shadow: 0 2px 4px rgba(255,255,255,0.5); }
+.header-glass .profile-area h2 { text-shadow: 0 2px 6px rgba(255,255,255,0.8); }
 
 .card-body { padding: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; align-content: flex-start; flex: 1; z-index: 10; min-height: 200px;}
 
@@ -137,7 +142,14 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .drag-handle-mod { cursor: grab; margin-right: 8px; opacity: 0.7; }
 .drag-handle-mod:active { cursor: grabbing; }
 
-.card.frame-glass .card-module { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+/* 🌟 こちらもガラス感MAX！ */
+.card.frame-glass .card-module { 
+  background: rgba(255, 255, 255, 0.4); 
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+  border: 1px solid rgba(255, 255, 255, 0.6); 
+  border-radius: 16px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05), inset 0 0 15px rgba(255,255,255,0.3); 
+}
 .card.frame-glass .module-title { color: var(--theme-color-1); border-bottom: 2px solid rgba(var(--theme-color-rgb), 0.2); }
 .card.frame-simple .card-module { background: #fff; border: 1px solid #ddd; border-radius: 12px; }
 .card.frame-simple .module-title { color: #333; border-bottom: 1px solid #eee; }
