@@ -26,12 +26,12 @@ function initTool() {
   addCard(); // 初期カード
   updateCard();
   
-  // 📱 スマホ時の高さを常に監視して、絶対に見切れないようにする！
+  // 📱 スマホ時の高さを常に監視（getBoundingClientRectで実際の描画高さを取得するから絶対見切れない！）
   setInterval(adjustScale, 500);
   window.addEventListener('resize', adjustScale);
 }
 
-// 🪄 スマホの画面幅に合わせて自動で縮小＆高さを確保する魔法の関数！
+// 🪄 スマホの画面幅に合わせて自動で縮小＆高さを完璧に合わせる魔法！
 function adjustScale() {
   const container = document.getElementById('cards-container');
   const box = document.getElementById('preview-scale-box');
@@ -40,8 +40,9 @@ function adjustScale() {
   if (window.innerWidth <= 1100) {
     const scale = box.clientWidth / 900;
     container.style.transform = `scale(${scale})`;
-    // 要素全体が入るように、縮小した高さ＋少し余裕（50px）をもたせる！
-    box.style.height = `${container.scrollHeight * scale + 50}px`;
+    container.style.transformOrigin = 'top left';
+    // getBoundingClientRectでスケール後の実際のピクセルサイズを取得して親枠に反映！
+    box.style.height = `${container.getBoundingClientRect().height + 50}px`;
   } else {
     container.style.transform = 'none';
     box.style.height = 'auto';
@@ -111,7 +112,7 @@ function setupEventListeners() {
       const val = (prop === '--mod-scale') ? (e.target.value / 100) : (prop === '--mod-width' ? e.target.value + '%' : e.target.value + 'px');
       document.getElementById(e.target.dataset.target).style.setProperty(prop, val);
       if(prop === '--mod-height') Object.values(chartInstances).forEach(c => c.resize());
-      setTimeout(adjustScale, 50); // サイズを変えたら親枠も調整
+      setTimeout(adjustScale, 50); 
     });
   });
 
@@ -124,6 +125,10 @@ function setupEventListeners() {
 
   document.getElementById('addCustomTypoBtn').addEventListener('click', () => addCustomTypo());
   document.getElementById('addCardBtn').addEventListener('click', () => { addCard(); updateCard(); });
+  
+  // 🗑️ 追加した削除ボタンのリスナー
+  document.getElementById('removeCardBtn').addEventListener('click', removeLastCard);
+  
   document.getElementById('downloadAllBtn').addEventListener('click', downloadAllCards);
   document.getElementById('shareBtn').addEventListener('click', shareTool);
   
@@ -184,11 +189,48 @@ function addCard() {
   updateSelectOptions();
 }
 
+// 🗑️ 最後のカードを削除（安全装置付き）
+function removeLastCard() {
+  if (cardCount <= 1) {
+    showToast("⚠️ 1枚目のカードは削除できません");
+    return;
+  }
+  
+  const lastCardBody = document.getElementById(`card-body-${cardCount}`);
+  const firstCardBody = document.getElementById('card-body-1');
+
+  // 消すカードの中にあるモジュールを救出（1枚目のカードに戻す）
+  Array.from(lastCardBody.children).forEach(child => {
+    if (!child.id.startsWith('comp-typologies-')) { // 各カード固有の類型枠以外は救出
+      firstCardBody.appendChild(child);
+      const modName = child.id.replace('comp-', '');
+      const selectEl = document.getElementById(`disp_${modName}`);
+      if(selectEl) selectEl.value = 'card-1'; // セレクトボックスもカード1に戻す
+    }
+  });
+
+  // カード本体を削除
+  const lastCard = document.getElementById(`card-${cardCount}`);
+  if (lastCard) lastCard.remove();
+  
+  cardCount--;
+  updateSelectOptions(); // 選択肢を更新
+  
+  // 類型などの配置先が消えたカードになっていたらカード1に戻す
+  document.querySelectorAll('.dynamic-card-select').forEach(sel => {
+    if (sel.value === `card-${cardCount + 1}`) sel.value = 'card-1';
+  });
+
+  updateCard();
+  setTimeout(adjustScale, 50);
+  showToast("🗑️ 最後のカードを削除しました");
+}
+
 function updateSelectOptions() {
   document.querySelectorAll('.dynamic-card-select').forEach(sel => {
     const cur = sel.value; sel.innerHTML = `<option value="none">非表示</option>`;
     for(let i=1; i<=cardCount; i++) sel.innerHTML += `<option value="card-${i}">カード ${i}枚目</option>`;
-    sel.value = cur || 'card-1';
+    sel.value = (cur && cur !== `card-${cardCount + 1}`) ? cur : 'card-1';
   });
 }
 
@@ -324,7 +366,6 @@ function startEffects() {
 
 function collectData() {
   const data = { customCount: customTypoCount, icon: userIconBase64, cardCount: cardCount, layout: {} };
-  
   for(let i=1; i<=cardCount; i++) {
     const cBody = document.getElementById(`card-body-${i}`);
     if(cBody) data.layout[`card-body-${i}`] = Array.from(cBody.children).map(el => el.id);
@@ -391,14 +432,14 @@ async function downloadAllCards() {
   const box = document.getElementById('preview-scale-box');
   const originalTransform = wrapper.style.transform;
   
-  // スマホ時でも超高画質で保存する魔法
+  // スマホ時でも超高画質で保存するためのリセット
   wrapper.style.transform = 'scale(1)'; 
   if(box) { box.style.height = 'auto'; box.style.overflow = 'visible'; }
 
-  // 👻 ガラス風（backdrop-filter）が消えちゃう問題の対策！保存する一瞬だけ白を濃くする！
+  // 👻 ガラス風が保存時に消えちゃう問題の対策！保存する一瞬だけ白を濃くする！
   const glassHeaders = document.querySelectorAll('.header-glass');
   const glassModules = document.querySelectorAll('.frame-glass .card-module');
-  glassHeaders.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.7)');
+  glassHeaders.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.75)');
   glassModules.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.85)');
   
   const jsonBytes = new TextEncoder().encode('__TYPO_DATA__' + JSON.stringify(collectData()));
@@ -410,7 +451,8 @@ async function downloadAllCards() {
     const canvas = await html2canvas(card, { 
       scale: 2, 
       backgroundColor: null, 
-      useCORS: true
+      useCORS: true,
+      windowWidth: 950 // これを入れることで横幅のレンダリング崩れを防止
     });
     card.style.borderRadius = '';
     
@@ -431,7 +473,7 @@ async function downloadAllCards() {
   glassModules.forEach(el => el.style.backgroundColor = '');
   wrapper.style.transform = originalTransform;
   if(box) box.style.overflow = 'hidden';
-  adjustScale();
+  adjustScale(); // 高さを再調整
   
   showToast("🎉 すべてのカードを保存しました！"); startEffects();
 }
