@@ -11,7 +11,6 @@ const cogFunctions = ['Te', 'Ti', 'Fe', 'Fi', 'Se', 'Si', 'Ne', 'Ni'];
 const egogramKeys = ['CP', 'NP', 'A', 'FC', 'AC'];
 const tciKeys = ['NS', 'HA', 'RD', 'P', 'SD', 'C', 'ST'];
 
-// 🌈 心理機能カラフルモードの色設定
 const colorfulCog = { Te: '#4a90e2', Ti: '#00bcd4', Fe: '#ff7eb3', Fi: '#e74c3c', Se: '#f39c12', Si: '#f1c40f', Ne: '#2ecc71', Ni: '#8bc34a' };
 
 let chartInstances = {};
@@ -26,6 +25,32 @@ function initTool() {
   initCharts();
   addCard(); // 初期カード
   updateCard();
+  
+  // 📱 スマホ時のプレビュー自動縮小をセット！
+  if (window.ResizeObserver) {
+    const observer = new ResizeObserver(adjustScale);
+    observer.observe(document.getElementById('cards-container'));
+  }
+  window.addEventListener('resize', adjustScale);
+  setTimeout(adjustScale, 100);
+}
+
+// 🪄 スマホの画面幅に合わせて自動で縮小させる魔法の関数！
+function adjustScale() {
+  const container = document.getElementById('cards-container');
+  const box = document.getElementById('preview-scale-box');
+  if (!container || !box) return;
+  
+  if (window.innerWidth <= 1100) {
+    const scale = box.clientWidth / 900;
+    container.style.transform = `scale(${scale})`;
+    container.style.transformOrigin = 'top left';
+    // 縮小した分の高さを親枠に反映させて、無駄な余白を消す！
+    box.style.height = `${container.offsetHeight * scale}px`;
+  } else {
+    container.style.transform = 'none';
+    box.style.height = 'auto';
+  }
 }
 
 function buildUI() {
@@ -91,6 +116,7 @@ function setupEventListeners() {
       const val = (prop === '--mod-scale') ? (e.target.value / 100) : (prop === '--mod-width' ? e.target.value + '%' : e.target.value + 'px');
       document.getElementById(e.target.dataset.target).style.setProperty(prop, val);
       if(prop === '--mod-height') Object.values(chartInstances).forEach(c => c.resize());
+      setTimeout(adjustScale, 50); // サイズを変えたら親枠も調整
     });
   });
 
@@ -159,7 +185,7 @@ function addCard() {
       </div>
     </div>
   `);
-  new Sortable(document.getElementById(`card-body-${cardCount}`), { group: 'shared-modules', animation: 150, handle: '.drag-handle-mod', onEnd: updateCard });
+  new Sortable(document.getElementById(`card-body-${cardCount}`), { group: 'shared-modules', animation: 150, handle: '.drag-handle-mod', onEnd: () => { updateCard(); setTimeout(adjustScale, 50); } });
   updateSelectOptions();
 }
 
@@ -174,21 +200,9 @@ function updateSelectOptions() {
 function initCharts() {
   Chart.defaults.color = '#7f8c8d'; Chart.defaults.font.family = "inherit";
   
-  // 📉 心理機能グラフのY軸設定（マイナス方向も見やすく、最大値を10に設定！）
   chartInstances.cog = new Chart(document.getElementById('cogChart'), { 
     type: 'bar', data: { labels: cogFunctions, datasets: [{ data: Array(8).fill(0), borderRadius: 4 }] }, 
-    options: { 
-      responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, 
-      scales: { 
-        y: { 
-          beginAtZero: true, suggestedMax: 10, suggestedMin: -5,
-          grid: { 
-            color: (ctx) => ctx.tick.value === 0 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)', // 0の線を濃くして基準をわかりやすく！
-            lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
-          }
-        } 
-      } 
-    } 
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 10, suggestedMin: -5, grid: { color: (ctx) => ctx.tick.value === 0 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } } } 
   });
   
   chartInstances.ego = new Chart(document.getElementById('egoChart'), { 
@@ -198,10 +212,7 @@ function initCharts() {
   
   chartInstances.tci = new Chart(document.getElementById('tciChart'), { 
     type: 'radar', data: { labels: tciKeys, datasets: [{ data: Array(7).fill(0) }] }, 
-    options: { 
-      responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, 
-      scales: { r: { beginAtZero: true, min: 0, suggestedMax: 5, ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)', color: '#444', font: { weight: 'bold' }, z: 10 } } } 
-    } 
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { r: { beginAtZero: true, min: 0, suggestedMax: 5, ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)', color: '#444', font: { weight: 'bold' }, z: 10 } } } } 
   });
 }
 
@@ -289,7 +300,6 @@ function updateCard() {
   const sortedCog = [...cogScores].sort((a,b)=>b.s - a.s);
   document.getElementById('function-order-text').innerText = sortedCog.map(c=>c.n).join(' > ');
   
-  // 🌈 心理機能のカラーバグを修正！（themeを選んだ時は配列で全部c1色に染め直す）
   let cogBgColor = cogColorType === 'colorful' ? cogScores.map(c => colorfulCog[c.n]) : Array(8).fill(c1);
   chartInstances.cog.data.datasets[0].data = cogScores.map(c=>c.s); 
   chartInstances.cog.data.datasets[0].backgroundColor = cogBgColor; 
@@ -317,11 +327,9 @@ function startEffects() {
   }, 500);
 }
 
-// 🧠 保存時に「各モジュールの配置（DOM順序）」も記録する
 function collectData() {
   const data = { customCount: customTypoCount, icon: userIconBase64, cardCount: cardCount, layout: {} };
   
-  // どのカードにどのモジュールが配置されているか保存！
   for(let i=1; i<=cardCount; i++) {
     const cBody = document.getElementById(`card-body-${i}`);
     if(cBody) data.layout[`card-body-${i}`] = Array.from(cBody.children).map(el => el.id);
@@ -333,11 +341,9 @@ function collectData() {
   return data;
 }
 
-// 🪄 復元時にレイアウトとスライダー数値を完璧に元通りにする
 function restoreData(data) {
   if(data.cardCount) while(cardCount < data.cardCount) addCard();
   
-  // 1. レイアウト（モジュールの配置）の完全復元！
   if(data.layout) {
     for(const parentId in data.layout) {
       const parent = document.getElementById(parentId);
@@ -350,13 +356,11 @@ function restoreData(data) {
     }
   }
 
-  // 2. カスタム枠の復元
   document.querySelectorAll('.drag-item-custom').forEach(el => el.remove());
   customTypoCount = 0;
   if(data.customCount) { for(let i=0; i<data.customCount; i++) addCustomTypo(); }
   if(data.icon) userIconBase64 = data.icon;
   
-  // 3. 全入力値の復元
   for (const key in data) {
     const el = document.getElementById(key);
     if (el) {
@@ -364,11 +368,10 @@ function restoreData(data) {
       if(key.startsWith('theme-color') || key === 'gradient-type') applyThemeColor();
       if(key === 'card-font') document.documentElement.style.setProperty('--font-family', data[key]);
       
-      // スライダーの数値を表示し直して、CSS変数にも再適用！
       if(el.classList.contains('mod-slider')) {
         const prop = el.dataset.prop;
         const unit = prop === '--mod-scale' || prop === '--mod-width' ? '%' : 'px';
-        el.nextElementSibling.innerText = el.value + unit; // 数値表示更新
+        el.nextElementSibling.innerText = el.value + unit; 
         const val = (prop === '--mod-scale') ? (el.value / 100) : (prop === '--mod-width' ? el.value + '%' : el.value + 'px');
         document.getElementById(el.dataset.target).style.setProperty(prop, val);
       }
@@ -379,11 +382,7 @@ function restoreData(data) {
   }
   startEffects(); 
   updateCard(); 
-  
-  // グラフのリサイズを強制的に発火させて、サイズを確実に反映させる！
-  setTimeout(() => {
-    Object.values(chartInstances).forEach(c => c.resize());
-  }, 100);
+  setTimeout(() => { Object.values(chartInstances).forEach(c => c.resize()); adjustScale(); }, 100);
   
   showToast("✨ データを復元しました！");
 }
@@ -394,14 +393,25 @@ async function downloadAllCards() {
   if(effectInterval) clearInterval(effectInterval);
   
   const wrapper = document.getElementById('cards-container');
+  const box = document.getElementById('preview-scale-box');
   const originalTransform = wrapper.style.transform;
+  
+  // スマホ時でも超高画質で保存するための魔法！🪄
   wrapper.style.transform = 'scale(1)'; 
+  if(box) { box.style.height = 'auto'; box.style.overflow = 'visible'; }
   
   const jsonBytes = new TextEncoder().encode('__TYPO_DATA__' + JSON.stringify(collectData()));
 
   for(let i=1; i<=cardCount; i++) {
-    const card = document.getElementById(`card-${i}`); card.style.borderRadius = '0';
-    const canvas = await html2canvas(card, { scale: 2, backgroundColor: null, useCORS: true });
+    const card = document.getElementById(`card-${i}`); 
+    card.style.borderRadius = '0';
+    
+    const canvas = await html2canvas(card, { 
+      scale: 2, 
+      backgroundColor: null, 
+      useCORS: true,
+      windowWidth: 950 // 画面外の見切れを防ぐ！
+    });
     card.style.borderRadius = '';
     
     await new Promise(res => canvas.toBlob(blob => {
@@ -417,6 +427,9 @@ async function downloadAllCards() {
   }
   
   wrapper.style.transform = originalTransform;
+  if(box) box.style.overflow = 'hidden';
+  adjustScale(); // 高さを再調整
+  
   showToast("🎉 すべてのカードを保存しました！"); startEffects();
 }
 
