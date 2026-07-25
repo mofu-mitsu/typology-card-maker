@@ -202,8 +202,15 @@
         </div>
       </div>
 
+<!-- 🎚️ MBTI 2分法 -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-dichotomy" checked> MBTI 2分法</label></h2>
+        <div class="input-group">
+          <label>配置先</label>
+          <div class="select-wrapper">
+            <select id="disp_dichotomy" class="custom-select dynamic-card-select"></select>
+          </div>
+        </div>
         <div class="size-controls">
           <label>幅:<input type="range" id="slider_w_dicho" class="mod-slider" data-prop="--mod-width" data-target="comp-dichotomy" min="20" max="100" value="100"><span class="val-disp">100%</span></label>
           <label>高:<input type="range" id="slider_h_dicho" class="mod-slider" data-prop="--mod-height" data-target="comp-dichotomy" min="80" max="400" value="200"><span class="val-disp">200px</span></label>
@@ -212,8 +219,15 @@
         <div id="dichotomy-form" class="slider-inputs"></div>
       </div>
 
+      <!-- 🧠 心理機能スコア -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-cog" checked> 心理機能スコア</label></h2>
+        <div class="input-group">
+          <label>配置先</label>
+          <div class="select-wrapper">
+            <select id="disp_cog" class="custom-select dynamic-card-select"></select>
+          </div>
+        </div>
         <div class="size-controls">
           <label>幅:<input type="range" id="slider_w_cog" class="mod-slider" data-prop="--mod-width" data-target="comp-cog" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
           <label>高:<input type="range" id="slider_h_cog" class="mod-slider" data-prop="--mod-height" data-target="comp-cog" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
@@ -231,8 +245,15 @@
         <div id="cognitive-functions-form" class="grid-inputs"></div>
       </div>
 
+      <!-- 📈 エゴグラム -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-ego" checked> エゴグラム</label></h2>
+        <div class="input-group">
+          <label>配置先</label>
+          <div class="select-wrapper">
+            <select id="disp_ego" class="custom-select dynamic-card-select"></select>
+          </div>
+        </div>
         <div class="size-controls">
           <label>幅:<input type="range" id="slider_w_ego" class="mod-slider" data-prop="--mod-width" data-target="comp-ego" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
           <label>高:<input type="range" id="slider_h_ego" class="mod-slider" data-prop="--mod-height" data-target="comp-ego" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
@@ -241,8 +262,15 @@
         <div id="egogram-form" class="grid-inputs"></div>
       </div>
 
+      <!-- 📡 TCI診断 -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-tci" checked> TCI診断</label></h2>
+        <div class="input-group">
+          <label>配置先</label>
+          <div class="select-wrapper">
+            <select id="disp_tci" class="custom-select dynamic-card-select"></select>
+          </div>
+        </div>
         <div class="size-controls">
           <label>幅:<input type="range" id="slider_w_tci" class="mod-slider" data-prop="--mod-width" data-target="comp-tci" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
           <label>高:<input type="range" id="slider_h_tci" class="mod-slider" data-prop="--mod-height" data-target="comp-tci" min="150" max="500" value="250"><span class="val-disp">250px</span></label>
@@ -251,11 +279,17 @@
         <div id="tci-form" class="grid-inputs"></div>
       </div>
 
+      <!-- 💬 フリースペース -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-free" checked> フリースペース</label></h2>
+        <div class="input-group">
+          <label>配置先</label>
+          <div class="select-wrapper">
+            <select id="disp_free" class="custom-select dynamic-card-select"></select>
+          </div>
+        </div>
         <textarea id="free-space" rows="4" placeholder="自由に自己紹介や補足を書いてね！"></textarea>
       </div>
-    </div>
 
     <!-- プレビュー側 -->
     <div class="preview-panel">
