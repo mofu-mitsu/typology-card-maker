@@ -32,6 +32,7 @@ function initTool() {
 }
 
 // 🪄 スマホの画面幅に合わせて自動で縮小＆高さを完璧に合わせる魔法！
+// 🪄 スマホの画面幅に合わせて自動で縮小＆高さをミリ単位で正確に計算する関数！
 function adjustScale() {
   const container = document.getElementById('cards-container');
   const box = document.getElementById('preview-scale-box');
@@ -41,8 +42,11 @@ function adjustScale() {
     const scale = box.clientWidth / 900;
     container.style.transform = `scale(${scale})`;
     container.style.transformOrigin = 'top left';
-    // getBoundingClientRectでスケール後の実際のピクセルサイズを取得して親枠に反映！
-    box.style.height = `${container.getBoundingClientRect().height + 50}px`;
+    
+    // 💡 スケール前の「本来の高さ(offsetHeight)」に縮小率(scale)を掛けることで
+    // 2枚目以降のカードがあっても100%正確に高さを確保してみ切れを防ぎます！
+    const exactHeight = container.offsetHeight * scale;
+    box.style.height = `${exactHeight + 30}px`;
   } else {
     container.style.transform = 'none';
     box.style.height = 'auto';
