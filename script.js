@@ -465,10 +465,10 @@ function collectData() {
 }
 
 // 🪄 画像読み込み（復元）時に一発でグラフを完璧なサイズで描き直す修正版！
+// 🪄 人間の「チェック外し＆付け直し」を完璧にシミュレートする最終奥義版！
 function restoreData(data) {
   if(data.cardCount) while(cardCount < data.cardCount) addCard();
   
-  // 1. レイアウト（配置）の復元
   if(data.layout) {
     for(const parentId in data.layout) {
       const parent = document.getElementById(parentId);
@@ -481,13 +481,11 @@ function restoreData(data) {
     }
   }
 
-  // 2. カスタム枠・アイコン等のクリアと復元
   document.querySelectorAll('.drag-item-custom').forEach(el => el.remove());
   customTypoCount = 0;
   if(data.customCount) { for(let i=0; i<data.customCount; i++) addCustomTypo(); }
   if(data.icon) userIconBase64 = data.icon;
   
-  // 3. 入力値・スライダー数値の復元
   for (const key in data) {
     const el = document.getElementById(key);
     if (el) {
@@ -511,37 +509,48 @@ function restoreData(data) {
   startEffects(); 
   updateCard(); 
   
-  // 💡 【ここが最大の修正ポイント！】一瞬だけ縮小を解除して原寸大でグラフを描き直す！
+  // 💡 【最終奥義】時間をズラして人間の操作をシミュレートする！
+  const container = document.getElementById('cards-container');
+  if (!container) return;
+
+  // 1. スマホの縮小を解除して、いったんグラフを全部非表示にする（チェック外す）
+  const originalTransform = container.style.transform;
+  container.style.transform = 'scale(1)'; 
+  
+  ['cog', 'ego', 'tci'].forEach(key => {
+    const comp = document.getElementById(`comp-${key}`);
+    if (comp) comp.style.display = 'none';
+  });
+
+  // 2. 100ミリ秒待って、ブラウザに「原寸大になった」ことを強制的に認識させる
   setTimeout(() => {
-    const container = document.getElementById('cards-container');
     
-    // ⚠️ これがないと、グラフの解像度が落ちて極太・巨大文字になります！
-    if (container) {
-      container.style.transform = 'scale(1)'; 
-    }
-    
+    // 3. グラフを再表示（チェック付け直す）
     ['cog', 'ego', 'tci'].forEach(key => {
       const comp = document.getElementById(`comp-${key}`);
-      if (comp && comp.style.display !== 'none') {
-        comp.style.display = 'none';
-        void comp.offsetHeight; // ブラウザに「非表示になった」と認識させる（リフロー強制）
-        comp.style.display = 'block'; // 即座に再表示してサイズを正規化！
+      const chk = document.querySelector(`.use-toggle[data-target="comp-${key}"]`);
+      // 元々チェックが入っていたものだけ表示
+      if (comp && chk && chk.checked) {
+        comp.style.display = 'block';
       }
     });
     
-    // チャートを高解像度の原寸大でリサイズ＆描画更新
+    // 4. 正しい大きさでグラフを再描画
     Object.values(chartInstances).forEach(c => {
       if (c) {
         c.resize();
         c.update('none');
       }
     });
-    
-    // 描き直した後に、再度スマホ用に綺麗に縮小する
-    adjustScale();
-  }, 100);
 
-  showToast("✨ データを復元しました！");
+    // 5. さらに50ミリ秒待ってグラフの描画完了を確実にしてから、スマホ縮小に戻す！
+    setTimeout(() => {
+      container.style.transform = originalTransform;
+      adjustScale();
+      showToast("✨ データを復元しました！");
+    }, 50);
+
+  }, 100);
 }
 
 async function downloadAllCards() {
