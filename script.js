@@ -511,8 +511,15 @@ function restoreData(data) {
   startEffects(); 
   updateCard(); 
   
-  // 💡 【ここが決め手！】「一瞬非表示→すぐ再表示」でChart.jsのサイズを正しく強制リセット！
+  // 💡 【ここが最大の修正ポイント！】一瞬だけ縮小を解除して原寸大でグラフを描き直す！
   setTimeout(() => {
+    const container = document.getElementById('cards-container');
+    
+    // ⚠️ これがないと、グラフの解像度が落ちて極太・巨大文字になります！
+    if (container) {
+      container.style.transform = 'scale(1)'; 
+    }
+    
     ['cog', 'ego', 'tci'].forEach(key => {
       const comp = document.getElementById(`comp-${key}`);
       if (comp && comp.style.display !== 'none') {
@@ -522,7 +529,7 @@ function restoreData(data) {
       }
     });
     
-    // チャートのリサイズと描画更新
+    // チャートを高解像度の原寸大でリサイズ＆描画更新
     Object.values(chartInstances).forEach(c => {
       if (c) {
         c.resize();
@@ -530,6 +537,7 @@ function restoreData(data) {
       }
     });
     
+    // 描き直した後に、再度スマホ用に綺麗に縮小する
     adjustScale();
   }, 100);
 
