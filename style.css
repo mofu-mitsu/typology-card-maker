@@ -201,3 +201,10 @@ footer { text-align: center; padding: 30px; background: #fff; margin-top: 40px; 
   .cards-wrapper { width: 900px; transform-origin: top left; margin: 0; }
   .mobile-only { display: inline; color: #ff7675; font-weight: bold;}
 }
+/* 🌟 グラフのキャンバスが勝手に小さくなるのを防ぐ絶対指定！ */
+.graph-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
