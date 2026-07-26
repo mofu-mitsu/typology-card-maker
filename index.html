@@ -203,6 +203,7 @@
       </div>
 
 <!-- 🎚️ MBTI 2分法 -->
+<!-- 🎚️ MBTI 2分法 (初期幅を48%、高さを250pxに変更) -->
       <div class="section">
         <h2><label><input type="checkbox" class="use-toggle" data-target="comp-dichotomy" checked> MBTI 2分法</label></h2>
         <div class="input-group">
@@ -212,8 +213,8 @@
           </div>
         </div>
         <div class="size-controls">
-          <label>幅:<input type="range" id="slider_w_dicho" class="mod-slider" data-prop="--mod-width" data-target="comp-dichotomy" min="20" max="100" value="100"><span class="val-disp">100%</span></label>
-          <label>高:<input type="range" id="slider_h_dicho" class="mod-slider" data-prop="--mod-height" data-target="comp-dichotomy" min="80" max="400" value="200"><span class="val-disp">200px</span></label>
+          <label>幅:<input type="range" id="slider_w_dicho" class="mod-slider" data-prop="--mod-width" data-target="comp-dichotomy" min="20" max="100" value="48"><span class="val-disp">48%</span></label>
+          <label>高:<input type="range" id="slider_h_dicho" class="mod-slider" data-prop="--mod-height" data-target="comp-dichotomy" min="80" max="400" value="250"><span class="val-disp">250px</span></label>
           <label>拡:<input type="range" id="slider_s_dicho" class="mod-slider" data-prop="--mod-scale" data-target="comp-dichotomy" min="50" max="150" value="100"><span class="val-disp">100%</span></label>
         </div>
         <div id="dichotomy-form" class="slider-inputs"></div>
@@ -312,7 +313,7 @@
   </div>
 
   <div id="components-pool" style="display: none;">
-    <div id="comp-dichotomy" class="card-module draggable-module" style="--mod-width: 100%; --mod-height: 200px;">
+    <div id="comp-dichotomy" class="card-module draggable-module" style="--mod-width: 48%; --mod-height: 250px;">
       <h3 class="module-title"><i class="fa-solid fa-sliders drag-handle-mod"></i> Dichotomy</h3>
       <div class="module-content dichotomy-bars graph-box" id="card-dichotomy"></div>
     </div>
