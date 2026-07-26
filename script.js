@@ -265,14 +265,29 @@ function initCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 10, suggestedMin: -5, grid: { color: (ctx) => ctx.tick.value === 0 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } } } 
   });
   
+  // 📈 エゴグラム：線を太く(borderWidth:3)、点も大きく(pointRadius:5)してスマホでもクッキリ！
   chartInstances.ego = new Chart(document.getElementById('egoChart'), { 
-    type: 'line', data: { labels: egogramKeys, datasets: [{ data: Array(5).fill(0), tension: 0.4, fill: true }] }, 
+    type: 'line', 
+    data: { labels: egogramKeys, datasets: [{ data: Array(5).fill(0), tension: 0.4, fill: true, borderWidth: 3, pointRadius: 5 }] }, 
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 5 } } } 
   });
   
+  // 📡 TCI：余白(padding)を詰めて、レーダー円自体を最初からドカンと大きく表示！
   chartInstances.tci = new Chart(document.getElementById('tciChart'), { 
-    type: 'radar', data: { labels: tciKeys, datasets: [{ data: Array(7).fill(0) }] }, 
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { r: { beginAtZero: true, min: 0, suggestedMax: 5, ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)', color: '#444', font: { weight: 'bold' }, z: 10 } } } } 
+    type: 'radar', 
+    data: { labels: tciKeys, datasets: [{ data: Array(7).fill(0) }] }, 
+    options: { 
+      responsive: true, maintainAspectRatio: false, 
+      layout: { padding: 5 }, // 余白を限界まで削って大きく！
+      plugins: { legend: { display: false } }, 
+      scales: { 
+        r: { 
+          beginAtZero: true, min: 0, suggestedMax: 5, 
+          ticks: { backdropColor: 'rgba(255, 255, 255, 0.85)', color: '#333', font: { weight: 'bold' }, z: 10 },
+          pointLabels: { font: { size: 11, weight: 'bold' } }
+        } 
+      } 
+    } 
   });
 }
 
