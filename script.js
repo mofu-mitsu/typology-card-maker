@@ -505,7 +505,20 @@ function restoreData(data) {
   }
   startEffects(); 
   updateCard(); 
-  setTimeout(() => { Object.values(chartInstances).forEach(c => c.resize()); adjustScale(); }, 100);
+  
+  // 💡 スマホで画像を読み込んだ時にグラフが小さく潰れるのを防ぐ魔法！
+  setTimeout(() => {
+    const container = document.getElementById('cards-container');
+    const originalTransform = container.style.transform;
+    
+    // 一時的に原寸大に戻してChart.jsに高画質でリサイズさせる！
+    container.style.transform = 'scale(1)';
+    Object.values(chartInstances).forEach(c => c.resize());
+    
+    // リサイズ完了後にスマホ用に縮小スケールを再適用！
+    container.style.transform = originalTransform;
+    adjustScale();
+  }, 100);
   
   showToast("✨ データを復元しました！");
 }
