@@ -577,7 +577,7 @@ function loadDataFromImage(event) {
 }
 
 function shareTool() {
-  if (navigator.share) navigator.share({ title: '類型自認カードメーカー', text: '自分だけの世界観カードを作ろう！', url: window.location.href }).catch(()=>{});
+  if (navigator.share) navigator.share({ title: '類型自認カードメーカー', text: '自分だけの自認カードを作ろう！ #類型自認カードメーカー', url: window.location.href }).catch(()=>{});
   else { navigator.clipboard.writeText(window.location.href); showToast("📋 URLをコピーしました！"); }
 }
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
