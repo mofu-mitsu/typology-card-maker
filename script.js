@@ -511,30 +511,27 @@ function restoreData(data) {
   startEffects(); 
   updateCard(); 
   
-  // 💡 【ここが決め手！】画面描画と配置が完全に確定した直後に、全グラフを高画質リサイズ！
+  // 💡 【ここが決め手！】「一瞬非表示→すぐ再表示」でChart.jsのサイズを正しく強制リセット！
   setTimeout(() => {
-    const container = document.getElementById('cards-container');
-    if (!container) return;
-    
-    // 一時的に縮小(scale)を解除して900pxの本来のサイズにする
-    const prevTransform = container.style.transform;
-    container.style.transform = 'scale(1)';
-    
-    // ブラウザにレイアウトの再計算を強制同期！
-    void container.offsetHeight; 
-    
-    // すべてのグラフを表示状態のまま一斉に描き直す！
-    Object.values(chartInstances).forEach(c => {
-      if (c) {
-        c.resize();
-        c.update('none'); // アニメーションなしで即座に反映
+    ['cog', 'ego', 'tci'].forEach(key => {
+      const comp = document.getElementById(`comp-${key}`);
+      if (comp && comp.style.display !== 'none') {
+        comp.style.display = 'none';
+        void comp.offsetHeight; // ブラウザに「非表示になった」と認識させる（リフロー強制）
+        comp.style.display = 'block'; // 即座に再表示してサイズを正規化！
       }
     });
     
-    // 元のスマホ縮小スケールに戻す
-    container.style.transform = prevTransform;
+    // チャートのリサイズと描画更新
+    Object.values(chartInstances).forEach(c => {
+      if (c) {
+        c.resize();
+        c.update('none');
+      }
+    });
+    
     adjustScale();
-  }, 150);
+  }, 100);
 
   showToast("✨ データを復元しました！");
 }
