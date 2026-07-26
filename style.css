@@ -157,7 +157,11 @@ input[type="text"], input[type="number"], textarea { width: 100%; padding: 12px 
 .card.frame-pop .typology-item { border: 2px solid #111; background: #f0f0f0; box-shadow: 2px 2px 0 #111;}
 
 .module-title { font-size: 0.95em; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1.5px; padding-bottom: 8px; display:flex; align-items:center; }
-.module-content { transform: scale(var(--mod-scale, 1)); transform-origin: top left; width: calc(100% / var(--mod-scale, 1)); }
+.module-content { 
+  transform: scale(var(--mod-scale, 1)); 
+  transform-origin: top center; /* 💡 上の中央を基準にすることで右へのズレを完全防止！ */
+  width: calc(100% / var(--mod-scale, 1)); 
+}
 
 .typology-grid { display: flex; flex-wrap: wrap; gap: 12px; }
 .typology-item { background: rgba(255,255,255,0.8); padding: 12px 16px; border-radius: 12px; border-left: 5px solid var(--theme-color-1); flex: 1 1 150px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
