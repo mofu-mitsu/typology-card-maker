@@ -464,9 +464,11 @@ function collectData() {
   return data;
 }
 
+// 🪄 画像読み込み（復元）時に一発でグラフを完璧なサイズで描き直す修正版！
 function restoreData(data) {
   if(data.cardCount) while(cardCount < data.cardCount) addCard();
   
+  // 1. レイアウト（配置）の復元
   if(data.layout) {
     for(const parentId in data.layout) {
       const parent = document.getElementById(parentId);
@@ -479,11 +481,13 @@ function restoreData(data) {
     }
   }
 
+  // 2. カスタム枠・アイコン等のクリアと復元
   document.querySelectorAll('.drag-item-custom').forEach(el => el.remove());
   customTypoCount = 0;
   if(data.customCount) { for(let i=0; i<data.customCount; i++) addCustomTypo(); }
   if(data.icon) userIconBase64 = data.icon;
   
+  // 3. 入力値・スライダー数値の復元
   for (const key in data) {
     const el = document.getElementById(key);
     if (el) {
@@ -503,23 +507,35 @@ function restoreData(data) {
       }
     }
   }
+  
   startEffects(); 
   updateCard(); 
   
-  // 💡 スマホで画像を読み込んだ時にグラフが小さく潰れるのを防ぐ魔法！
+  // 💡 【ここが決め手！】画面描画と配置が完全に確定した直後に、全グラフを高画質リサイズ！
   setTimeout(() => {
     const container = document.getElementById('cards-container');
-    const originalTransform = container.style.transform;
+    if (!container) return;
     
-    // 一時的に原寸大に戻してChart.jsに高画質でリサイズさせる！
+    // 一時的に縮小(scale)を解除して900pxの本来のサイズにする
+    const prevTransform = container.style.transform;
     container.style.transform = 'scale(1)';
-    Object.values(chartInstances).forEach(c => c.resize());
     
-    // リサイズ完了後にスマホ用に縮小スケールを再適用！
-    container.style.transform = originalTransform;
+    // ブラウザにレイアウトの再計算を強制同期！
+    void container.offsetHeight; 
+    
+    // すべてのグラフを表示状態のまま一斉に描き直す！
+    Object.values(chartInstances).forEach(c => {
+      if (c) {
+        c.resize();
+        c.update('none'); // アニメーションなしで即座に反映
+      }
+    });
+    
+    // 元のスマホ縮小スケールに戻す
+    container.style.transform = prevTransform;
     adjustScale();
-  }, 100);
-  
+  }, 150);
+
   showToast("✨ データを復元しました！");
 }
 
