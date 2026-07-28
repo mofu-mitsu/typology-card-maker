@@ -1,3 +1,6 @@
+// 📡 GASのWebアプリURLを設定！
+const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwzWGWp8aTzkpEw0k9jLRpLXgiV75PoPr4e1_Uu_nz5IBieN63glP7XSbGLY9RP1Jln1g/exec";
+
 const baseTypologies = [
   { id: 'mbti', label: 'MBTI', off: true }, { id: 'enneagram', label: 'エニアグラム', off: true },
   { id: 'instinct', label: '生得本能' }, { id: 'socionics', label: 'ソシオニクス', off: true },
@@ -15,6 +18,7 @@ const colorfulCog = { Te: '#4a90e2', Ti: '#00bcd4', Fe: '#ff7eb3', Fi: '#e74c3c'
 
 let chartInstances = {};
 let customTypoCount = 0;
+let breakCount = 0; // ↩️ 改行用カウンター
 let userIconBase64 = "";
 let cardCount = 0; 
 let effectInterval = null;
@@ -26,12 +30,11 @@ function initTool() {
   addCard(); // 初期カード
   updateCard();
   
-  // 📱 スマホ時の高さを常に監視（getBoundingClientRectで実際の描画高さを取得するから絶対見切れない！）
+  // 📱 スマホ時の高さを常に監視
   setInterval(adjustScale, 500);
   window.addEventListener('resize', adjustScale);
 }
 
-// 🪄 スマホの画面幅に合わせて自動で縮小＆高さを完璧に合わせる魔法！
 // 🪄 スマホの画面幅に合わせて自動で縮小＆高さをミリ単位で正確に計算する関数！
 function adjustScale() {
   const container = document.getElementById('cards-container');
@@ -43,8 +46,7 @@ function adjustScale() {
     container.style.transform = `scale(${scale})`;
     container.style.transformOrigin = 'top left';
     
-    // 💡 スケール前の「本来の高さ(offsetHeight)」に縮小率(scale)を掛けることで
-    // 2枚目以降のカードがあっても100%正確に高さを確保してみ切れを防ぎます！
+    // 💡 スケール前の「本来の高さ(offsetHeight)」に縮小率(scale)を掛けることで見切れを防止
     const exactHeight = container.offsetHeight * scale;
     box.style.height = `${exactHeight + 30}px`;
   } else {
@@ -57,7 +59,7 @@ function buildUI() {
   const typoForm = document.getElementById('typologies-form');
   baseTypologies.forEach(t => {
     typoForm.insertAdjacentHTML('beforeend', `
-      <div class="list-item-row drag-item-typo" data-id="${t.id}">
+      <div class="list-item-row drag-item-typo" id="wrap_base_${t.id}" data-id="${t.id}">
         <i class="fa-solid fa-grip-lines drag-handle"></i>
         <label style="width:110px; font-weight:bold; font-size:0.85em;">${t.label}</label>
         <input type="text" id="val_${t.id}" placeholder="値">
@@ -128,11 +130,13 @@ function setupEventListeners() {
   });
 
   document.getElementById('addCustomTypoBtn').addEventListener('click', () => addCustomTypo());
+  // ↩️ HTMLに作ったボタンと連携！
+  if(document.getElementById('addBreakBtn')) {
+    document.getElementById('addBreakBtn').addEventListener('click', () => addBreakTypo());
+  }
+
   document.getElementById('addCardBtn').addEventListener('click', () => { addCard(); updateCard(); });
-  
-  // 🗑️ 追加した削除ボタンのリスナー
   document.getElementById('removeCardBtn').addEventListener('click', removeLastCard);
-  
   document.getElementById('downloadAllBtn').addEventListener('click', downloadAllCards);
   document.getElementById('shareBtn').addEventListener('click', shareTool);
   
@@ -173,6 +177,19 @@ function addCustomTypo(name = "", val = "") {
   updateSelectOptions(); updateCard();
 }
 
+// ↩️ 改行用パーツ追加関数
+function addBreakTypo() {
+  breakCount++; const id = `break_${breakCount}`;
+  document.getElementById('typologies-form').insertAdjacentHTML('beforeend', `
+    <div class="list-item-row drag-item-break" id="wrap_${id}">
+      <i class="fa-solid fa-grip-lines drag-handle"></i>
+      <span style="flex:1; color:#636e72;"><i class="fa-solid fa-arrow-turn-down"></i> ここで改行する</span>
+      <select id="disp_item_${id}" class="custom-select dynamic-card-select"></select>
+    </div>
+  `);
+  updateSelectOptions(); updateCard();
+}
+
 function addCard() {
   cardCount++; const cId = `card-${cardCount}`;
   document.getElementById('cards-container').insertAdjacentHTML('beforeend', `
@@ -190,7 +207,6 @@ function addCard() {
     </div>
   `);
 
-  // 💡 ドラッグ＆ドロップでカード間を動かした時に、フォームのセレクトボックスも連動して切り替わるように設定！
   new Sortable(document.getElementById(`card-body-${cardCount}`), { 
     group: 'shared-modules', 
     animation: 150, 
@@ -202,7 +218,7 @@ function addCard() {
         const modKey = movedItem.id.replace('comp-', '');
         const cardNum = newParentId.replace('card-body-', '');
         const sel = document.getElementById(`disp_${modKey}`);
-        if (sel) sel.value = `card-${cardNum}`; // セレクトボックスの表示を合わせる！
+        if (sel) sel.value = `card-${cardNum}`; 
       }
       updateCard(); 
       adjustScale(); 
@@ -212,7 +228,6 @@ function addCard() {
   updateSelectOptions();
 }
 
-// 🗑️ 最後のカードを削除（安全装置付き）
 function removeLastCard() {
   if (cardCount <= 1) {
     showToast("⚠️ 1枚目のカードは削除できません");
@@ -222,24 +237,21 @@ function removeLastCard() {
   const lastCardBody = document.getElementById(`card-body-${cardCount}`);
   const firstCardBody = document.getElementById('card-body-1');
 
-  // 消すカードの中にあるモジュールを救出（1枚目のカードに戻す）
   Array.from(lastCardBody.children).forEach(child => {
-    if (!child.id.startsWith('comp-typologies-')) { // 各カード固有の類型枠以外は救出
+    if (!child.id.startsWith('comp-typologies-')) { 
       firstCardBody.appendChild(child);
       const modName = child.id.replace('comp-', '');
       const selectEl = document.getElementById(`disp_${modName}`);
-      if(selectEl) selectEl.value = 'card-1'; // セレクトボックスもカード1に戻す
+      if(selectEl) selectEl.value = 'card-1'; 
     }
   });
 
-  // カード本体を削除
   const lastCard = document.getElementById(`card-${cardCount}`);
   if (lastCard) lastCard.remove();
   
   cardCount--;
-  updateSelectOptions(); // 選択肢を更新
+  updateSelectOptions(); 
   
-  // 類型などの配置先が消えたカードになっていたらカード1に戻す
   document.querySelectorAll('.dynamic-card-select').forEach(sel => {
     if (sel.value === `card-${cardCount + 1}`) sel.value = 'card-1';
   });
@@ -265,29 +277,14 @@ function initCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 10, suggestedMin: -5, grid: { color: (ctx) => ctx.tick.value === 0 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } } } 
   });
   
-  // 📈 エゴグラム：線を太く(borderWidth:3)、点も大きく(pointRadius:5)してスマホでもクッキリ！
   chartInstances.ego = new Chart(document.getElementById('egoChart'), { 
-    type: 'line', 
-    data: { labels: egogramKeys, datasets: [{ data: Array(5).fill(0), tension: 0.4, fill: true, borderWidth: 3, pointRadius: 5 }] }, 
+    type: 'line', data: { labels: egogramKeys, datasets: [{ data: Array(5).fill(0), tension: 0.4, fill: true, borderWidth: 3, pointRadius: 5 }] }, 
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 5 } } } 
   });
   
-  // 📡 TCI：余白(padding)を詰めて、レーダー円自体を最初からドカンと大きく表示！
   chartInstances.tci = new Chart(document.getElementById('tciChart'), { 
-    type: 'radar', 
-    data: { labels: tciKeys, datasets: [{ data: Array(7).fill(0) }] }, 
-    options: { 
-      responsive: true, maintainAspectRatio: false, 
-      layout: { padding: 5 }, // 余白を限界まで削って大きく！
-      plugins: { legend: { display: false } }, 
-      scales: { 
-        r: { 
-          beginAtZero: true, min: 0, suggestedMax: 5, 
-          ticks: { backdropColor: 'rgba(255, 255, 255, 0.85)', color: '#333', font: { weight: 'bold' }, z: 10 },
-          pointLabels: { font: { size: 11, weight: 'bold' } }
-        } 
-      } 
-    } 
+    type: 'radar', data: { labels: tciKeys, datasets: [{ data: Array(7).fill(0) }] }, 
+    options: { responsive: true, maintainAspectRatio: false, layout: { padding: 5 }, plugins: { legend: { display: false } }, scales: { r: { beginAtZero: true, min: 0, suggestedMax: 5, ticks: { backdropColor: 'rgba(255, 255, 255, 0.85)', color: '#333', font: { weight: 'bold' }, z: 10 }, pointLabels: { font: { size: 11, weight: 'bold' } } } } } 
   });
 }
 
@@ -302,65 +299,62 @@ function updateCard() {
   const rgb = document.documentElement.style.getPropertyValue('--theme-color-rgb') || '255, 126, 179';
   const showSub = document.getElementById('show-header-sub').checked;
 
-  // 1. 各カードのヘッダーやデザインテーマを更新
   for(let i=1; i<=cardCount; i++) {
-    const cName = document.getElementById(`card-name-${i}`);
-    if(cName) cName.innerText = nameStr + (i > 1 ? ` - P${i}` : '');
-    
-    const cIcon = document.getElementById(`card-icon-${i}`);
-    if(cIcon) cIcon.style.backgroundImage = userIconBase64 ? `url(${userIconBase64})` : '';
-    
-    const cardDom = document.getElementById(`card-${i}`);
-    if(cardDom) cardDom.className = `card ${theme} ${frame}`;
-    
+    document.getElementById(`card-name-${i}`).innerText = nameStr + (i > 1 ? ` - P${i}` : '');
+    document.getElementById(`card-icon-${i}`).style.backgroundImage = userIconBase64 ? `url(${userIconBase64})` : '';
+    document.getElementById(`card-${i}`).className = `card ${theme} ${frame}`;
     const header = document.getElementById(`header-${i}`);
-    if(header) {
-      header.className = `card-header ${headerBg} ${align}`;
-      if(i > 1) header.style.display = showSub ? 'flex' : 'none';
-    }
+    header.className = `card-header ${headerBg} ${align}`;
+    if(i > 1) header.style.display = showSub ? 'flex' : 'none';
   }
 
-  // 2. 各グラフ・モジュールを選択されたカードへお引っ越し＆表示切替
   ['dichotomy', 'cog', 'ego', 'tci', 'free'].forEach(modKey => {
     const sel = document.getElementById(`disp_${modKey}`);
     const comp = document.getElementById(`comp-${modKey}`);
     const chk = document.querySelector(`.use-toggle[data-target="comp-${modKey}"]`);
     
     if (sel && comp) {
-      const targetVal = sel.value; // 'card-1', 'card-2', 'none'
+      const targetVal = sel.value; 
       if (targetVal === 'none' || (chk && !chk.checked)) {
         comp.style.display = 'none';
       } else {
         const targetBody = document.getElementById(targetVal.replace('card-', 'card-body-'));
         if (targetBody && comp.parentElement !== targetBody) {
-          targetBody.appendChild(comp); // 指定されたカードに自動で引っ越し！
+          targetBody.appendChild(comp); 
         }
         comp.style.display = 'block';
       }
     }
   });
 
-  // 3. 基本の類型＆カスタム類型の振り分け
-  for(let i=1; i<=cardCount; i++) {
-    const typoGrid = document.getElementById(`card-typologies-${i}`);
-    if(typoGrid) typoGrid.innerHTML = '';
-  }
+  for(let i=1; i<=cardCount; i++) document.getElementById(`card-typologies-${i}`).innerHTML = '';
   
+  // 💡 改行パーツを含めて順序を取得！
   const orderList = Array.from(document.getElementById('typologies-form').children).map(el => {
-    return el.classList.contains('drag-item-typo') ? { type: 'base', id: el.dataset.id } : { type: 'custom', id: el.id.replace('wrap_', '') };
+    if (el.classList.contains('drag-item-typo')) return { type: 'base', id: el.dataset.id };
+    if (el.classList.contains('drag-item-custom')) return { type: 'custom', id: el.id.replace('wrap_', '') };
+    if (el.classList.contains('drag-item-break')) return { type: 'break', id: el.id.replace('wrap_', '') };
   });
 
   orderList.forEach(item => {
+    if (item.type === 'break') { // ↩️ 改行処理
+      const tCard = document.getElementById(`disp_item_${item.id}`).value;
+      if (tCard !== 'none') {
+        const grid = document.getElementById(tCard.replace('card-', 'card-typologies-'));
+        // flex-basis: 100% の透明な箱を入れて強制改行させる！
+        if (grid) grid.innerHTML += `<div style="flex-basis: 100%; height: 0; margin: 0; padding: 0;"></div>`;
+      }
+      return;
+    }
+
     let label, val, isOff, tCard;
     if(item.type === 'base') {
       const t = baseTypologies.find(x => x.id === item.id);
       label = t.label; val = document.getElementById(`val_${item.id}`).value.trim();
-      isOff = document.getElementById(`off_${item.id}`)?.checked;
-      tCard = document.getElementById(`disp_item_${item.id}`).value;
+      isOff = document.getElementById(`off_${item.id}`)?.checked; tCard = document.getElementById(`disp_item_${item.id}`).value;
     } else {
       label = document.getElementById(`name_${item.id}`).value.trim() || 'カスタム';
-      val = document.getElementById(`val_${item.id}`).value.trim();
-      tCard = document.getElementById(`disp_item_${item.id}`).value;
+      val = document.getElementById(`val_${item.id}`).value.trim(); tCard = document.getElementById(`disp_item_${item.id}`).value;
     }
     if(val && tCard !== 'none') {
       const grid = document.getElementById(tCard.replace('card-', 'card-typologies-'));
@@ -376,7 +370,6 @@ function updateCard() {
     }
   }
 
-  // 4. MBTI 2分法グラフの再描画（数値・ツマミ付き）
   const dichoArea = document.getElementById('card-dichotomy');
   if(dichoArea) {
     dichoArea.innerHTML = '<div class="dicho-wrap">';
@@ -402,7 +395,6 @@ function updateCard() {
     });
   }
 
-  // 5. 心理機能スコアの更新＆グラフ色付け
   const cogScores = cogFunctions.map(f => ({ n: f, s: Number(document.getElementById(`cog_${f}`).value||0) }));
   const sortedCog = [...cogScores].sort((a,b)=>b.s - a.s);
   const orderTextEl = document.getElementById('function-order-text');
@@ -415,7 +407,6 @@ function updateCard() {
     chartInstances.cog.update();
   }
   
-  // 6. エゴグラム & TCI グラフの更新
   if(chartInstances.ego) {
     chartInstances.ego.data.datasets[0].data = egogramKeys.map(k => Number(document.getElementById(`ego_${k}`).value||0)); 
     chartInstances.ego.data.datasets[0].borderColor = c1; 
@@ -430,7 +421,6 @@ function updateCard() {
     chartInstances.tci.update();
   }
 
-  // 7. フリースペースの更新
   const freeText = document.getElementById('free-space').value;
   const freeSpaceBox = document.getElementById('card-free-space');
   if(freeSpaceBox) freeSpaceBox.innerText = freeText;
@@ -451,41 +441,69 @@ function startEffects() {
   }, 500);
 }
 
+// 🧠 保存データを収集
 function collectData() {
-  const data = { customCount: customTypoCount, icon: userIconBase64, cardCount: cardCount, layout: {} };
+  const data = { customCount: customTypoCount, breakCount: breakCount, icon: userIconBase64, cardCount: cardCount, layout: {} };
+  
   for(let i=1; i<=cardCount; i++) {
     const cBody = document.getElementById(`card-body-${i}`);
     if(cBody) data.layout[`card-body-${i}`] = Array.from(cBody.children).map(el => el.id);
   }
   data.layout['components-pool'] = Array.from(document.getElementById('components-pool').children).map(el => el.id);
+  
+  // 💡 類型リストの並び順も保存する！
+  const typoForm = document.getElementById('typologies-form');
+  if(typoForm) data.layout['typologies-form'] = Array.from(typoForm.children).map(el => el.id);
 
   document.querySelectorAll('input[type="text"], input[type="number"], input[type="range"], input[type="color"], textarea, select').forEach(el => { if(el.id) data[el.id] = el.value; });
   document.querySelectorAll('input[type="checkbox"]').forEach(el => { if(el.id) data[el.id] = el.checked; });
   return data;
 }
 
-// 🪄 画像読み込み（復元）時に一発でグラフを完璧なサイズで描き直す修正版！
-// 🪄 人間の「チェック外し＆付け直し」を完璧にシミュレートする最終奥義版！
+// 📡 GASへデータを送信する関数
+function sendToGAS(data) {
+  if (!GAS_WEBAPP_URL) return;
+
+  const payload = { ...data };
+  delete payload.icon;   // 画像データは重いので送信しない
+  delete payload.layout; // レイアウト情報も不要
+
+  fetch(GAS_WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors', // クロスドメインエラーを回避
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(e => console.log('GAS送信エラー:', e));
+}
+
+// 🪄 スマホの縮小状態に騙されず、超高画質でグラフを復元する完全版！
 function restoreData(data) {
   if(data.cardCount) while(cardCount < data.cardCount) addCard();
   
+  // 1. パーツを作り直す
+  document.querySelectorAll('.drag-item-custom').forEach(el => el.remove());
+  document.querySelectorAll('.drag-item-break').forEach(el => el.remove());
+  customTypoCount = 0;
+  breakCount = 0;
+  if(data.customCount) { for(let i=0; i<data.customCount; i++) addCustomTypo(); }
+  if(data.breakCount) { for(let i=0; i<data.breakCount; i++) addBreakTypo(); }
+  if(data.icon) userIconBase64 = data.icon;
+
+  // 2. レイアウト（配置）の復元
   if(data.layout) {
     for(const parentId in data.layout) {
       const parent = document.getElementById(parentId);
       if(parent) {
         data.layout[parentId].forEach(childId => {
+          if(!childId) return;
           const child = document.getElementById(childId);
           if(child) parent.appendChild(child);
         });
       }
     }
   }
-
-  document.querySelectorAll('.drag-item-custom').forEach(el => el.remove());
-  customTypoCount = 0;
-  if(data.customCount) { for(let i=0; i<data.customCount; i++) addCustomTypo(); }
-  if(data.icon) userIconBase64 = data.icon;
   
+  // 3. 入力値・スライダー数値の復元
   for (const key in data) {
     const el = document.getElementById(key);
     if (el) {
@@ -509,48 +527,34 @@ function restoreData(data) {
   startEffects(); 
   updateCard(); 
   
-  // 💡 【最終奥義】時間をズラして人間の操作をシミュレートする！
-  const container = document.getElementById('cards-container');
-  if (!container) return;
-
-  // 1. スマホの縮小を解除して、いったんグラフを全部非表示にする（チェック外す）
-  const originalTransform = container.style.transform;
-  container.style.transform = 'scale(1)'; 
-  
-  ['cog', 'ego', 'tci'].forEach(key => {
-    const comp = document.getElementById(`comp-${key}`);
-    if (comp) comp.style.display = 'none';
-  });
-
-  // 2. 100ミリ秒待って、ブラウザに「原寸大になった」ことを強制的に認識させる
+  // 💡 【最終奥義】一瞬だけ縮小を解除して原寸大でグラフを描き直す！
   setTimeout(() => {
+    const container = document.getElementById('cards-container');
     
-    // 3. グラフを再表示（チェック付け直す）
+    if (container) {
+      container.style.transform = 'scale(1)'; 
+    }
+    
     ['cog', 'ego', 'tci'].forEach(key => {
       const comp = document.getElementById(`comp-${key}`);
-      const chk = document.querySelector(`.use-toggle[data-target="comp-${key}"]`);
-      // 元々チェックが入っていたものだけ表示
-      if (comp && chk && chk.checked) {
-        comp.style.display = 'block';
+      if (comp && comp.style.display !== 'none') {
+        comp.style.display = 'none';
+        void comp.offsetHeight; // リフロー強制
+        comp.style.display = 'block'; 
       }
     });
     
-    // 4. 正しい大きさでグラフを再描画
     Object.values(chartInstances).forEach(c => {
       if (c) {
         c.resize();
         c.update('none');
       }
     });
-
-    // 5. さらに50ミリ秒待ってグラフの描画完了を確実にしてから、スマホ縮小に戻す！
-    setTimeout(() => {
-      container.style.transform = originalTransform;
-      adjustScale();
-      showToast("✨ データを復元しました！");
-    }, 50);
-
+    
+    adjustScale();
   }, 100);
+
+  showToast("✨ データを復元しました！");
 }
 
 async function downloadAllCards() {
@@ -562,17 +566,19 @@ async function downloadAllCards() {
   const box = document.getElementById('preview-scale-box');
   const originalTransform = wrapper.style.transform;
   
-  // スマホ時でも超高画質で保存するためのリセット
   wrapper.style.transform = 'scale(1)'; 
   if(box) { box.style.height = 'auto'; box.style.overflow = 'visible'; }
 
-  // 👻 ガラス風が保存時に消えちゃう問題の対策！保存する一瞬だけ白を濃くする！
   const glassHeaders = document.querySelectorAll('.header-glass');
   const glassModules = document.querySelectorAll('.frame-glass .card-module');
   glassHeaders.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.75)');
   glassModules.forEach(el => el.style.backgroundColor = 'rgba(255, 255, 255, 0.85)');
   
-  const jsonBytes = new TextEncoder().encode('__TYPO_DATA__' + JSON.stringify(collectData()));
+  const collectedData = collectData();
+  const jsonBytes = new TextEncoder().encode('__TYPO_DATA__' + JSON.stringify(collectedData));
+
+  // 📡 ここでGASへデータ送信！
+  sendToGAS(collectedData);
 
   for(let i=1; i<=cardCount; i++) {
     const card = document.getElementById(`card-${i}`); 
@@ -582,7 +588,7 @@ async function downloadAllCards() {
       scale: 2, 
       backgroundColor: null, 
       useCORS: true,
-      windowWidth: 950 // これを入れることで横幅のレンダリング崩れを防止
+      windowWidth: 950 
     });
     card.style.borderRadius = '';
     
@@ -598,12 +604,11 @@ async function downloadAllCards() {
     await new Promise(r => setTimeout(r, 500));
   }
   
-  // ガラスの色とサイズを元に戻す
   glassHeaders.forEach(el => el.style.backgroundColor = '');
   glassModules.forEach(el => el.style.backgroundColor = '');
   wrapper.style.transform = originalTransform;
   if(box) box.style.overflow = 'hidden';
-  adjustScale(); // 高さを再調整
+  adjustScale(); 
   
   showToast("🎉 すべてのカードを保存しました！"); startEffects();
 }
@@ -620,7 +625,7 @@ function loadDataFromImage(event) {
 }
 
 function shareTool() {
-  if (navigator.share) navigator.share({ title: '類型自認カードメーカー', text: '自分だけの自認カードを作ろう！ #類型自認カードメーカー', url: window.location.href }).catch(()=>{});
+  if (navigator.share) navigator.share({ title: '類型自認カードメーカー', text: '自分だけの性格タイプをおしゃれな画像にしよう！ #類型自認カードメーカー', url: window.location.href }).catch(()=>{});
   else { navigator.clipboard.writeText(window.location.href); showToast("📋 URLをコピーしました！"); }
 }
 function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
