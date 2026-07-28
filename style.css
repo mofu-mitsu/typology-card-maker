@@ -215,3 +215,13 @@ footer { text-align: center; padding: 30px; background: #fff; margin-top: 40px; 
   color: #636e72;
 }
 .drag-item-break span { font-size: 0.85em; font-weight: bold; }
+
+/* 🖱️ ドラッグ中の要素（ゴースト）が変な形・位置になるのを防ぎ、綺麗に浮かせる！ */
+.sortable-fallback {
+  opacity: 1 !important;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+  z-index: 9999 !important;
+  background: #fff !important;
+  cursor: grabbing !important;
+  border-radius: 8px !important;
+}
